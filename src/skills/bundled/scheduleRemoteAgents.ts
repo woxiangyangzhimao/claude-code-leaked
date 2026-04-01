@@ -321,6 +321,12 @@ ${needsGitHubAccessReminder ? `- If the user's request seems to require GitHub r
 ${userArgs ? `\n## User Request\n\nThe user said: "${userArgs}"\n\nStart by understanding their intent and working through the appropriate workflow above.` : ''}`
 }
 
+/**
+ * 注册 /schedule 技能（云端定时远程智能体）。
+ * 这是 Claude Code 非常强大的独家功能（Tengu 架构）：
+ * 用户可以在 Anthropic 的云基础设施中，启动一个隔离的沙盒 (CCR, Claude Code Remote)，
+ * 并在云端跑 Cron 定时任务（例如：每天早上 9 点拉取代码，跑一遍审查，报表发到 Slack）。
+ */
 export function registerScheduleRemoteAgentsSkill(): void {
   registerBundledSkill({
     name: 'schedule',

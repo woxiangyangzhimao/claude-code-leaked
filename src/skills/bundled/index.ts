@@ -13,13 +13,13 @@ import { registerUpdateConfigSkill } from './updateConfig.js'
 import { registerVerifySkill } from './verify.js'
 
 /**
- * Initialize all bundled skills.
- * Called at startup to register skills that ship with the CLI.
+ * 初始化并注册所有的内建绑定技能。
+ * 该函数在整个 CLI 架构启动时被调用，负责把所有底层的高级功能挂载到上下文中。
  *
- * To add a new bundled skill:
- * 1. Create a new file in src/skills/bundled/ (e.g., myskill.ts)
- * 2. Export a register function that calls registerBundledSkill()
- * 3. Import and call that function here
+ * 如果你想给 Claude Code 添加新的全局内置技能（就像 /batch, /debug 这样）：
+ * 1. 在 src/skills/bundled/ 下建一个新文件 (比如 my-skill.ts)
+ * 2. 在文件里导出一个调用 registerBundledSkill() 的注册函数
+ * 3. 引入到当前文件，并放入下方的初始化列表即可
  */
 export function initBundledSkills(): void {
   registerUpdateConfigSkill()
@@ -48,9 +48,8 @@ export function initBundledSkills(): void {
     /* eslint-disable @typescript-eslint/no-require-imports */
     const { registerLoopSkill } = require('./loop.js')
     /* eslint-enable @typescript-eslint/no-require-imports */
-    // /loop's isEnabled delegates to isKairosCronEnabled() — same lazy
-    // per-invocation pattern as the cron tools. Registered unconditionally;
-    // the skill's own isEnabled callback decides visibility.
+    // /loop 的可见性（是否启用）会委托给 isKairosCronEnabled() 进行判断，
+    // 以实现和 Cron 调度类工具一致的惰性评估模式。这确保了只在符合配置的场景下开放该技能。
     registerLoopSkill()
   }
   if (feature('AGENT_TRIGGERS_REMOTE')) {

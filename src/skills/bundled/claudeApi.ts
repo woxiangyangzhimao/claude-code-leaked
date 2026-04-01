@@ -2,8 +2,9 @@ import { readdir } from 'fs/promises'
 import { getCwd } from '../../utils/cwd.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 
-// claudeApiContent.js bundles 247KB of .md strings. Lazy-load inside
-// getPromptForCommand so they only enter memory when /claude-api is invoked.
+// claudeApiContent.js 打包了 247KB 的 .md 纯文本内容。
+// 为了防止浪费内存，这里做了一个惰性加载 (Lazy-load)：只有在 getPromptForCommand 
+// 被真正调用时（即用户敲下 /claude-api / /api），这些文本才会进入内存。
 type SkillContent = typeof import('./claudeApiContent.js')
 
 type DetectedLanguage =
@@ -16,6 +17,7 @@ type DetectedLanguage =
   | 'php'
   | 'curl'
 
+/** 语言特征指纹表：通过探测当前目录的文件是否存在，猜测当前项目开发语言 */
 const LANGUAGE_INDICATORS: Record<DetectedLanguage, string[]> = {
   python: ['.py', 'requirements.txt', 'pyproject.toml', 'setup.py', 'Pipfile'],
   typescript: ['.ts', '.tsx', 'tsconfig.json', 'package.json'],
@@ -27,6 +29,10 @@ const LANGUAGE_INDICATORS: Record<DetectedLanguage, string[]> = {
   curl: [],
 }
 
+/**
+ * 读取当前工作区目录并探测项目的主力语言。
+ * 如果找到了特征文件，就返回对应的语言枚举，用于后续给模型定向投射该语言的 SDK 文档。
+ */
 async function detectLanguage(): Promise<DetectedLanguage | null> {
   const cwd = getCwd()
   let entries: string[]
@@ -52,6 +58,7 @@ async function detectLanguage(): Promise<DetectedLanguage | null> {
   return null
 }
 
+/** 根据探测到的语言，仅从打包好的静态文件映射中剔出对应语言和 shared 公共部分的 markdown 文档路径 */
 function getFilesForLanguage(
   lang: DetectedLanguage,
   content: SkillContent,
@@ -78,6 +85,10 @@ function processContent(md: string, content: SkillContent): string {
   return out
 }
 
+/**
+ * 将查找到的所有相关 MD 文档组装成带 XML Tag（例如 <doc path="...">）格式的大型字符串。
+ * 这样做是为了通过 XML 结构清晰地向 Claude 模型注入知识背景，防止产生幻觉。
+ */
 function buildInlineReference(
   filePaths: string[],
   content: SkillContent,
@@ -129,6 +140,11 @@ The relevant documentation for your detected language is included below in \`<do
 **Latest docs via WebFetch:**
 → Refer to \`shared/live-sources.md\` for URLs`
 
+/**
+ * 构建发给 Claude 的最终系统提示词。
+ * 它巧妙地把 "基础提示词"、"如何阅读指南(Reading Guide)" 以及 "带 XML 的官方 API 文档" 拼接在了一起。
+ * 当你在对话中问 "用 Python 写一个使用 tools_use 的 Agent"，AI 不会直接瞎编，而是根据这里拼接好的文档写出高分代码。
+ */
 function buildPrompt(
   lang: DetectedLanguage | null,
   args: string,
@@ -153,7 +169,7 @@ function buildPrompt(
         buildInlineReference(filePaths, content),
     )
   } else {
-    // No language detected — include all docs and let the model ask
+    // 降级策略: 没有探测到语言，丢给它所有文档，让它去问用户
     parts.push(INLINE_READING_GUIDE.replace(/\{lang\}/g, 'unknown'))
     parts.push(
       'No project language was auto-detected. Ask the user which language they are using, then refer to the matching docs below.',
@@ -177,6 +193,11 @@ function buildPrompt(
   return parts.join('\n\n')
 }
 
+/**
+ * 注册 /claude-api (也称 /api) 高阶技能。
+ * 该技能通过 RAG (检索增强生成) 机制，充当使用 Anthropic API 时的“专家模式”。
+ * 当用户提到 SDK、Agent 等词汇时，系统会自动触发此技能。
+ */
 export function registerClaudeApiSkill(): void {
   registerBundledSkill({
     name: 'claude-api',
@@ -187,8 +208,11 @@ export function registerClaudeApiSkill(): void {
     allowedTools: ['Read', 'Grep', 'Glob', 'WebFetch'],
     userInvocable: true,
     async getPromptForCommand(args) {
+      // 惰性加载超大内存的静态文件
       const content = await import('./claudeApiContent.js')
+      // 智能探测用户当前目录语言
       const lang = await detectLanguage()
+      // 拼接巨无霸 Prompt
       const prompt = buildPrompt(lang, args, content)
       return [{ type: 'text', text: prompt }]
     },

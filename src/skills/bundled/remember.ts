@@ -1,6 +1,12 @@
 import { isAutoMemoryEnabled } from '../../memdir/paths.js'
 import { registerBundledSkill } from '../bundledSkills.js'
 
+/**
+ * 注册 /remember 技能 (记忆整理师)。
+ * 这个技能是 Claude Code 能够拥有“长期跨会话记忆”的核心桥梁机制。
+ * 它会引导大模型去读取隐式的 Auto-memory (当前会话零碎知识点)，
+ * 然后将其提炼、分类并合并（晋升）到永久性文件 CLAUDE.md 或 CLAUDE.local.md 中。
+ */
 export function registerRememberSkill(): void {
   if (process.env.USER_TYPE !== 'ant') {
     return
@@ -59,7 +65,7 @@ If auto-memory is empty, say so and offer to review CLAUDE.md for cleanup.
 - Do NOT modify files without explicit user approval
 - Do NOT create new files unless the target doesn't exist yet
 - Ask about ambiguous entries — don't guess
-`
+\`
 
   registerBundledSkill({
     name: 'remember',

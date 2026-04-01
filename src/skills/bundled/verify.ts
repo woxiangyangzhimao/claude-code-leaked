@@ -9,6 +9,11 @@ const DESCRIPTION =
     ? frontmatter.description
     : 'Verify a code change does what it should by running the app.'
 
+/**
+ * 注册 /verify 技能（端到端验证测试）。
+ * 通过读取 verify 专用的 Markdown 文件作为提示词上下文，
+ * 引导大模型在完成代码修改后，自己跑编译和运行，最终确认功能正常工作，这也是内部灰度测试特性。
+ */
 export function registerVerifySkill(): void {
   if (process.env.USER_TYPE !== 'ant') {
     return

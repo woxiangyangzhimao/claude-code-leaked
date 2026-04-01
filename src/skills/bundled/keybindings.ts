@@ -289,6 +289,11 @@ const SECTION_DOCTOR = [
   '**Errors** prevent bindings from working and must be fixed. **Warnings** indicate potential conflicts but the binding may still work.',
 ].join('\n')
 
+/**
+ * 注册按键绑定助手技能。
+ * 作用：拦截用户关于“如何修改快捷键”的提问，防止 AI 去网上乱搜，
+ * 而是直接将本地的 keybindings.json 规范及可用的枚举池，动态注入给大模型。
+ */
 export function registerKeybindingsSkill(): void {
   registerBundledSkill({
     name: 'keybindings-help',

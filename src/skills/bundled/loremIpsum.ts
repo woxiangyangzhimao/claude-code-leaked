@@ -231,7 +231,13 @@ function generateLoremIpsum(targetTokens: number): string {
   return result.trim()
 }
 
+/**
+ * 注册 /lorem-ipsum 测试技能（仅限内部开发者使用 / Ant-only）。
+ * 这是一个极客级别的小工具，专门为了大模型做"长文本极限压测"而设计。
+ * 它能够精确地生成 N 个指定长度的 Token，用来测试高上下文截断、内存爆炸或检索失焦等边界问题。
+ */
 export function registerLoremIpsumSkill(): void {
+  // 禁止非内部员工使用
   if (process.env.USER_TYPE !== 'ant') {
     return
   }

@@ -58,6 +58,12 @@ If Slack MCP isn't available, format the report as a message the user can copy-p
 - If the user gave an argument (e.g., a specific PID or symptom), focus there first.
 `
 
+/**
+ * 注册 /stuck 技能（诊断卡死的 Claude Session）。
+ * 内部诊断工具。当用户感觉某个终端里的 Claude Code 死循环或彻底卡住时，
+ * 该指令会指引大模型去跑操作系统的 ps, grep, sample 命令，
+ * 分析 CPU、内存 (RSS)、进程状态 (Zombie/D/T)，并格式化后发送到内部的 Slack 频道求助。
+ */
 export function registerStuckSkill(): void {
   if (process.env.USER_TYPE !== 'ant') {
     return

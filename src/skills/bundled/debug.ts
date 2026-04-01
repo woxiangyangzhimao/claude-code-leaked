@@ -9,6 +9,12 @@ import { registerBundledSkill } from '../bundledSkills.js'
 const DEFAULT_DEBUG_LINES_READ = 20
 const TAIL_READ_BYTES = 64 * 1024
 
+/**
+ * 注册 /debug 技能。
+ * 这是一个非常实用的内部自省(Introspection)指令。
+ * 当用户运行 Claude Code 遇到报错时，敲击 /debug 即可让 AI 自动读取它自己的底层运行日志，
+ * 分析自己出了什么问题，并直接给出解决方案。
+ */
 export function registerDebugSkill(): void {
   registerBundledSkill({
     name: 'debug',
@@ -18,10 +24,9 @@ export function registerDebugSkill(): void {
         : 'Enable debug logging for this session and help diagnose issues',
     allowedTools: ['Read', 'Grep', 'Glob'],
     argumentHint: '[issue description]',
-    // disableModelInvocation so that the user has to explicitly request it in
-    // interactive mode and so the description does not take up context.
+    // 禁用模型在后台自主调用，避免模型在正常的开发任务中动辄跑去看系统日志浪费 Token
     disableModelInvocation: true,
-    userInvocable: true,
+    userInvocable: true, // 仅允许用户手动触发
     async getPromptForCommand(args) {
       // Non-ants don't write debug logs by default — turn logging on now so
       // subsequent activity in this session is captured.
@@ -30,8 +35,8 @@ export function registerDebugSkill(): void {
 
       let logInfo: string
       try {
-        // Tail the log without reading the whole thing - debug logs grow
-        // unbounded in long sessions and reading them in full spikes RSS.
+        // 核心性能优化：只读取日志文件的尾部 (Tail)，而不是全部加载。
+        // 因为长时间运行的 CLI session 日志会变得极大，全图读取会导致内存(RSS)飙升。
         const stats = await stat(debugLogPath)
         const readSize = Math.min(stats.size, TAIL_READ_BYTES)
         const startOffset = stats.size - readSize

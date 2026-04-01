@@ -52,6 +52,15 @@ Wait for all three agents to complete. Aggregate their findings and fix each iss
 When done, briefly summarize what was fixed (or confirm the code was already clean).
 `
 
+/**
+ * 注册 /simplify 技能（代码重构与极简化审查）。
+ * 这是另一种经典的多智能体 (Multi-Agent) 协同时序模式：
+ * 它利用 AgentTool 并行触发 3 个子智能体，分别独立负责审查：
+ * 1. 代码复用 (Reuse)
+ * 2. 代码质量 (Quality)
+ * 3. 运行性能 (Efficiency)
+ * 当 3 个 Agent 都返回结果后，再统一整合并进行重构。
+ */
 export function registerSimplifySkill(): void {
   registerBundledSkill({
     name: 'simplify',

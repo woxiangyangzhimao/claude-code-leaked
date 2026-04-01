@@ -442,6 +442,13 @@ If a hook isn't running:
 6. **Use --debug** - Run \`claude --debug\` to see hook execution logs
 `
 
+/**
+ * 注册 /update-config 技能（自动配管专家）。
+ * 这是一个结合了复杂 Hook (生命周期钩子) 的自动化配管工具。
+ * 当用户要求 "每次 Claude 帮我写完代码，自动跑一下 Prettier" 时，
+ * 它会自动去操作修改 .claude/settings.json，挂载 PostToolUse 或 PreToolUse 的系统钩子，
+ * 以及自动把配置文件格式用 zod schema 约束，避免用户填错 JSON 字段。
+ */
 export function registerUpdateConfigSkill(): void {
   registerBundledSkill({
     name: 'update-config',

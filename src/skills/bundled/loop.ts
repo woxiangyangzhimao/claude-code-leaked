@@ -71,6 +71,11 @@ Supported suffixes: \`s\` (seconds, rounded up to nearest minute, min 1), \`m\` 
 ${args}`
 }
 
+/**
+ * 注册 /loop 技能（定时循环执行特定任务）。
+ * 这是一个结合了 Cron 工具的高级执行流：它可以解析用户输入的间隔时间（比如 "every 10m"），
+ * 然后转化为 Cron 表达式，最后调度 Cron 任务来周期性跑对应的 Prompt。
+ */
 export function registerLoopSkill(): void {
   registerBundledSkill({
     name: 'loop',

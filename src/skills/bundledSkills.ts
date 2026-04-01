@@ -9,8 +9,8 @@ import { getBundledSkillsRoot } from '../utils/permissions/filesystem.js'
 import type { HooksSettings } from '../utils/settings/types.js'
 
 /**
- * Definition for a bundled skill that ships with the CLI.
- * These are registered programmatically at startup.
+ * CLI 核心自带绑定技能 (Bundled Skill) 的接口定义。
+ * 这些技能并非从外部 Markdown 加载，而是在程序启动时通过代码注册的（内建机制）。
  */
 export type BundledSkillDefinition = {
   name: string
@@ -40,15 +40,14 @@ export type BundledSkillDefinition = {
   ) => Promise<ContentBlockParam[]>
 }
 
-// Internal registry for bundled skills
+// 内部注册表，用于存储所有绑定的技能
 const bundledSkills: Command[] = []
 
 /**
- * Register a bundled skill that will be available to the model.
- * Call this at module initialization or in an init function.
+ * 注册一个会被注入给大模型的绑定技能。
+ * 该函数会在模块初始化或系统 init 函数中被调用。
  *
- * Bundled skills are compiled into the CLI binary and available to all users.
- * They follow the same pattern as registerPostSamplingHook() for internal features.
+ * 绑定技能 (Bundled skills) 会被直接编译打进 CLI 二进制包里，所有用户默认可用。
  */
 export function registerBundledSkill(definition: BundledSkillDefinition): void {
   const { files } = definition
@@ -122,11 +121,11 @@ export function getBundledSkillExtractDir(skillName: string): string {
 }
 
 /**
- * Extract a bundled skill's reference files to disk so the model can
- * Read/Grep them on demand. Called lazily on first skill invocation.
+ * 将绑定技能里自带的 reference 临时文件解压（释放）到本地磁盘上。
+ * 这样大模型就可以按需使用 BashRead 或 BashGrep 工具去阅读这些文件了。
+ * 只有在第一次调用该技能时惰性解压，提升启动速度。
  *
- * Returns the directory written to, or null if write failed (skill
- * continues to work, just without the base-directory prefix).
+ * 如果写入失败会返回 null（技能依然能跑，只是没有了 base-directory 的前缀指引）。
  */
 async function extractBundledSkillFiles(
   skillName: string,

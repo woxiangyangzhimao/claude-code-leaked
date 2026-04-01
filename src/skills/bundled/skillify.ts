@@ -155,7 +155,15 @@ After writing, tell the user:
 - That they can edit the SKILL.md directly to refine it
 `
 
+/**
+ * 注册 /skillify 技能（自动化提取技能的“造物主”）。
+ * 这个堪称框架里最神仙的功能之一：
+ * 它可以回顾你和 AI 刚刚一起完成的一整套复杂任务，提取所有的思考路径、指令集合和关键决策点，
+ * 然后自动将其编码为一个包含 frontmatter 的标准 SKILL.md 文件。
+ * 这相当于让 AI 自己写出可以复用自己的代码。
+ */
 export function registerSkillifySkill(): void {
+  // 目前仅在内部员工环境可见
   if (process.env.USER_TYPE !== 'ant') {
     return
   }
